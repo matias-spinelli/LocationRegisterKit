@@ -48,6 +48,7 @@ public final class LocationRegisterKitModule {
 
     public func startModule() {
         observeSucursales()
+        observeAuthorization()
         observeLifecycle()
 
         registroManager.sucursalesViewModel.cargarSucursales()
@@ -63,11 +64,30 @@ public final class LocationRegisterKitModule {
                 guard let self = self else { return }
                 guard !nuevas.isEmpty else { return }
 
-                print("📍 Sucursales listas → pasando a GeofencingManager")
-                self.geofencingManager.receiveSucursalesFromModule(nuevas)
+                if self.locationManager.authorizationStatus == .authorizedAlways {
+                    print("📍 Sucursales listas → pasando a GeofencingManager")
+                    self.geofencingManager.receiveSucursalesFromModule(nuevas)
+                } else {
+                    self.geofencingManager.pendingSucursales = nuevas
+                    print("🟡 [MODULE] Sucursales listas pero NO hay AUTH ALWAYS → guardadas en pending")
+                }
             }
             .store(in: &cancellables)
     }
+
+    private func observeAuthorization() {
+        locationManager.$authorizationStatus
+            .sink { [weak self] status in
+                guard let self = self else { return }
+                if status == .authorizedAlways, !self.geofencingManager.pendingSucursales.isEmpty {
+                    print("🟢 [MODULE] AUTH ALWAYS otorgado → registrando sucursales pendientes")
+                    self.geofencingManager.setupGeofences(for: self.geofencingManager.pendingSucursales)
+                    self.geofencingManager.pendingSucursales.removeAll()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
 
     private func observeLifecycle() {
         NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)

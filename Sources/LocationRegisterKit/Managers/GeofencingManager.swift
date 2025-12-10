@@ -11,15 +11,15 @@ import Combine
 
 @MainActor
 public final class GeofencingManager: NSObject, ObservableObject {
-
+    
     private let manager = CLLocationManager()
     public weak var registroManager: RegistroManager?
-
+    
     @Published public var isAppActive: Bool = true
     @Published public var monitoredRegions: [CLCircularRegion] = []
-
-    private var pendingSucursales: [Sucursal] = []
-
+    
+    var pendingSucursales: [Sucursal] = []
+    
     public override init() {
         super.init()
         manager.delegate = self
@@ -27,17 +27,16 @@ public final class GeofencingManager: NSObject, ObservableObject {
         manager.allowsBackgroundLocationUpdates = true
         manager.pausesLocationUpdatesAutomatically = false
     }
-
+    
     public func receiveSucursalesFromModule(_ sucursales: [Sucursal]) {
         guard !sucursales.isEmpty else { return }
-
-        if manager.authorizationStatus != .authorizedAlways {
-            print("🟡 [GEOFENCE] No tengo AUTH ALWAYS → guardo sucursales en pending")
+        
+        if manager.authorizationStatus == .authorizedAlways {
+            setupGeofences(for: sucursales)
+        } else {
             pendingSucursales = sucursales
-            return
+            print("🟡 [GEOFENCE] No tengo AUTH ALWAYS → guardo sucursales en pending")
         }
-
-        setupGeofences(for: sucursales)
     }
 
     public func setupGeofences(for sucursales: [Sucursal]) {
@@ -47,7 +46,6 @@ public final class GeofencingManager: NSObject, ObservableObject {
             return
         }
 
-        // Limpiar geofences actuales
         for r in manager.monitoredRegions {
             manager.stopMonitoring(for: r)
         }
@@ -61,6 +59,10 @@ public final class GeofencingManager: NSObject, ObservableObject {
             manager.startMonitoring(for: region)
             monitoredRegions.append(region)
             print("🟦 [GEOFENCE] Monitoreando → \(region.identifier)")
+        }
+
+        if pendingSucursales == sucursales {
+            pendingSucursales.removeAll()
         }
     }
 }
