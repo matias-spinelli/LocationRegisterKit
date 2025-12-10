@@ -17,7 +17,7 @@ final class SucursalService {
     }
 
     func loadFromJSON(resourceName: String = "sucursales") async throws {
-        guard let url = Bundle.main.url(forResource: resourceName, withExtension: "json") else {
+        guard let url = Bundle.module.url(forResource: resourceName, withExtension: "json") else {
             throw NSError(domain: "SucursalService", code: 404,
                           userInfo: [NSLocalizedDescriptionKey: "Resource not found"])
         }
