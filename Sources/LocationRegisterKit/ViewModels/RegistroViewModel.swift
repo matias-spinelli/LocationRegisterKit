@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 @MainActor
-final class RegistroViewModel: ObservableObject {
+public final class RegistroViewModel: ObservableObject {
 
     @Published var registros: [Registro] = []
     @Published var errorMessage: String?

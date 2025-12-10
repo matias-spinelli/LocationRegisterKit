@@ -8,38 +8,94 @@
 import Foundation
 import CoreLocation
 import Combine
+import UIKit   // para App lifecycle
 
 @MainActor
 public final class LocationRegisterKitModule {
 
     public static let shared = LocationRegisterKitModule()
+    
+    private var cancellables = Set<AnyCancellable>()
 
-    public let registroManager: RegistroManager
-    public let locationManager: LocationManager
-    public let geofencingManager: GeofencingManager
+    private let _registroManager: RegistroManager
+    private let _locationManager: LocationManager
+    private let _geofencingManager: GeofencingManager
+
+    public var registroManager: RegistroManager { _registroManager }
+    public var locationManager: LocationManager { _locationManager }
+    public var geofencingManager: GeofencingManager { _geofencingManager }
+
+    public var sucursalesViewModel: SucursalesViewModel {
+        _registroManager.sucursalesViewModel
+    }
+
+    public var registroViewModel: RegistroViewModel {
+        _registroManager.registroViewModel
+    }
 
     private init() {
-        let sucVm = SucursalesViewModel()
-        let regVm = RegistroViewModel()
+        let suc = SucursalesViewModel()
+        let reg = RegistroViewModel()
+        let rManager = RegistroManager(registroViewModel: reg, sucursalesViewModel: suc)
 
-        registroManager = RegistroManager(
-            registroViewModel: regVm,
-            sucursalesViewModel: sucVm
-        )
+        _registroManager = rManager
+        _locationManager = LocationManager()
+        _geofencingManager = GeofencingManager()
 
-        locationManager = LocationManager()
-        geofencingManager = GeofencingManager()
-
-        locationManager.registroManager = registroManager
-        geofencingManager.registroManager = registroManager
+        _locationManager.registroManager = rManager
+        _geofencingManager.registroManager = rManager
     }
 
-    // MARK: - Public API
+
+    // MARK: - PUBLIC API
 
     public func startModule() {
+        // 1) cargar sucursales desde CoreData → JSON → lo que sea
+        registroManager.sucursalesViewModel.cargarSucursales()
+
+        // 2) reconstruir cache de registros
+        registroManager.rebuildCache()
+
+        // 3) iniciar autorización + location updates
         locationManager.requestAuthorization()
         locationManager.start()
+
+        // 4) observar cambios de sucursales
+        observeSucursales()
+
+        // 5) lifecycle
+        observeLifecycle()
     }
+
+    // MARK: - Observers
+
+    private func observeSucursales() {
+        registroManager.sucursalesViewModel.$sucursales
+            .sink { [weak self] nuevas in
+                guard let self = self else { return }
+                guard !nuevas.isEmpty else { return }
+
+                print("📍 Sucursales listas → configurando geofences")
+                self.geofencingManager.setupGeofences(for: nuevas)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func observeLifecycle() {
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.locationManager.enterBackground()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                self?.locationManager.enterForeground()
+            }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Optional public helpers
 
     public func registrarEntrada(_ id: UUID) {
         registroManager.registrarEntrada(sucursalID: id)
@@ -47,33 +103,5 @@ public final class LocationRegisterKitModule {
 
     public func registrarSalida(_ id: UUID) {
         registroManager.registrarSalida(sucursalID: id)
-    }
-
-    // MARK: - JSON async/await
-
-    public func loadSucursalesFromJSON() async {
-        do {
-            try await SucursalService().loadFromJSON()
-        } catch {
-            print("❌ Error cargando sucursales JSON: \(error)")
-        }
-    }
-
-    // MARK: - CoreData cleanup
-
-    public func clearSucursalesCoreData() {
-        do {
-            try SucursalRepository().clearAll()
-        } catch {
-            print("❌ Error borrando sucursales CoreData: \(error)")
-        }
-    }
-
-    public func clearRegistrosCoreData() {
-        do {
-            try RegistroRepository().clearAll()
-        } catch {
-            print("❌ Error borrando registros CoreData: \(error)")
-        }
     }
 }

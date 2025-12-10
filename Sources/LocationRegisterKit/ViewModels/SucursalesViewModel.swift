@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 @MainActor
-final class SucursalesViewModel: ObservableObject {
+public final class SucursalesViewModel: ObservableObject {
     @MainActor @Published var sucursales: [Sucursal] = []
     @MainActor @Published var isLoading: Bool = false
     @MainActor @Published var errorMessage: String?

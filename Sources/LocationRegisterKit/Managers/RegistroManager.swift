@@ -14,8 +14,8 @@ public final class RegistroManager: ObservableObject {
 
     @Published private(set) var currentSucursalID: UUID? = nil
 
-    private let registroViewModel: RegistroViewModel
-    private let sucursalesViewModel: SucursalesViewModel
+    let registroViewModel: RegistroViewModel
+    let sucursalesViewModel: SucursalesViewModel
 
     private let detectionRadius: Double
     private let minInterval: TimeInterval
