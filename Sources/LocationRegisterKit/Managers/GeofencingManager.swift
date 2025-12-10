@@ -18,6 +18,8 @@ public final class GeofencingManager: NSObject, ObservableObject {
     @Published public var isAppActive: Bool = true
     @Published public var monitoredRegions: [CLCircularRegion] = []
 
+    private var pendingSucursales: [Sucursal] = []
+
     public override init() {
         super.init()
         manager.delegate = self
@@ -26,46 +28,38 @@ public final class GeofencingManager: NSObject, ObservableObject {
         manager.pausesLocationUpdatesAutomatically = false
     }
 
-    // MARK: - Configurar geofences
+    public func receiveSucursalesFromModule(_ sucursales: [Sucursal]) {
+        guard !sucursales.isEmpty else { return }
+
+        if manager.authorizationStatus != .authorizedAlways {
+            print("🟡 [GEOFENCE] No tengo AUTH ALWAYS → guardo sucursales en pending")
+            pendingSucursales = sucursales
+            return
+        }
+
+        setupGeofences(for: sucursales)
+    }
 
     public func setupGeofences(for sucursales: [Sucursal]) {
-        guard !sucursales.isEmpty else {
-            print("⚠️ [GEOFENCE] No hay sucursales")
-            return
-        }
-
+        guard !sucursales.isEmpty else { return }
         guard manager.authorizationStatus == .authorizedAlways else {
-            print("🔴 [GEOFENCE] No tengo AUTH ALWAYS")
+            pendingSucursales = sucursales
             return
         }
 
-        if !manager.monitoredRegions.isEmpty {
-            for r in manager.monitoredRegions {
-                manager.stopMonitoring(for: r)
-            }
+        // Limpiar geofences actuales
+        for r in manager.monitoredRegions {
+            manager.stopMonitoring(for: r)
         }
-
         monitoredRegions.removeAll()
 
         for suc in sucursales {
-
-            let center = CLLocationCoordinate2D(
-                latitude: suc.latitude,
-                longitude: suc.longitude
-            )
-
-            let region = CLCircularRegion(
-                center: center,
-                radius: 80,
-                identifier: suc.id.uuidString
-            )
-
+            let center = CLLocationCoordinate2D(latitude: suc.latitude, longitude: suc.longitude)
+            let region = CLCircularRegion(center: center, radius: 80, identifier: suc.id.uuidString)
             region.notifyOnEntry = true
             region.notifyOnExit = true
-
             manager.startMonitoring(for: region)
             monitoredRegions.append(region)
-
             print("🟦 [GEOFENCE] Monitoreando → \(region.identifier)")
         }
     }

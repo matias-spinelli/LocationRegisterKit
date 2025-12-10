@@ -2,7 +2,7 @@
 //  LocationRegisterKitModule.swift
 //  LocationRegisterKit
 //
-//  Created by ChatGPT “Michu” on 09/12/2025.
+//  Created by Matías Spinelli on 09/12/2025.
 //
 
 import Foundation
@@ -46,23 +46,16 @@ public final class LocationRegisterKitModule {
         _geofencingManager.registroManager = rManager
     }
 
-
-    // MARK: - PUBLIC API
-
     public func startModule() {
-        registroManager.sucursalesViewModel.cargarSucursales()
+        observeSucursales()
+        observeLifecycle()
 
+        registroManager.sucursalesViewModel.cargarSucursales()
         registroManager.rebuildCache()
 
         locationManager.requestAuthorization()
         locationManager.start()
-
-        observeSucursales()
-
-        observeLifecycle()
     }
-
-    // MARK: - Observers
 
     private func observeSucursales() {
         registroManager.sucursalesViewModel.$sucursales
@@ -70,8 +63,8 @@ public final class LocationRegisterKitModule {
                 guard let self = self else { return }
                 guard !nuevas.isEmpty else { return }
 
-                print("📍 Sucursales listas → configurando geofences")
-                self.geofencingManager.setupGeofences(for: nuevas)
+                print("📍 Sucursales listas → pasando a GeofencingManager")
+                self.geofencingManager.receiveSucursalesFromModule(nuevas)
             }
             .store(in: &cancellables)
     }
@@ -89,8 +82,6 @@ public final class LocationRegisterKitModule {
             }
             .store(in: &cancellables)
     }
-
-    // MARK: - Optional public helpers
 
     public func registrarEntrada(_ id: UUID) {
         registroManager.registrarEntrada(sucursalID: id)

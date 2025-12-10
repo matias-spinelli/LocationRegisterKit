@@ -1,6 +1,6 @@
 //
 //  Sucursal+CoreDataClass.swift
-//  iSucurgal
+//  LocationRegisterKit
 //
 //  Created by Matías Spinelli on 05/12/2025.
 //
