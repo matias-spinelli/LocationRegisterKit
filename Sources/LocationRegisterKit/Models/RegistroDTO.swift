@@ -21,7 +21,7 @@ public enum RegistroType: String, Codable {
 }
 
 extension Registro {
-    var tipoEnum: RegistroType {
+    public var tipoEnum: RegistroType {
         return RegistroType(rawValue: tipo) ?? .entrada
     }
 }

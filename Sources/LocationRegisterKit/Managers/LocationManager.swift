@@ -14,7 +14,7 @@ public final class LocationManager: NSObject, ObservableObject {
 
     private let manager = CLLocationManager()
 
-    @Published var userLocation: CLLocation?
+    @Published public var userLocation: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus?
 
     weak var registroManager: RegistroManager?

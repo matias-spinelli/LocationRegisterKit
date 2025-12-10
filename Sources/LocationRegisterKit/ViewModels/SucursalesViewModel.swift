@@ -11,8 +11,8 @@ import Combine
 @MainActor
 public final class SucursalesViewModel: ObservableObject {
     @MainActor @Published var sucursales: [Sucursal] = []
-    @MainActor @Published var isLoading: Bool = false
-    @MainActor @Published var errorMessage: String?
+    @MainActor @Published public var isLoading: Bool = false
+    @MainActor @Published public var errorMessage: String?
 
     private let service: SucursalService
 
@@ -21,7 +21,7 @@ public final class SucursalesViewModel: ObservableObject {
     }
 
     @MainActor
-    func cargarSucursales() {
+    public func cargarSucursales() {
         isLoading = true
         errorMessage = nil
 
@@ -82,7 +82,7 @@ public final class SucursalesViewModel: ObservableObject {
         }
     }
     
-    @MainActor func clearAll() {
+    @MainActor public func clearAll() {
         do {
             try service.clearAll()
             self.sucursales = []

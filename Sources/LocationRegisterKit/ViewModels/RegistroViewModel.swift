@@ -12,7 +12,7 @@ import Combine
 public final class RegistroViewModel: ObservableObject {
 
     @Published var registros: [Registro] = []
-    @Published var errorMessage: String?
+    @Published public var errorMessage: String?
 
     private let service = RegistroService()
 
@@ -33,7 +33,7 @@ public final class RegistroViewModel: ObservableObject {
         }
     }
 
-    func clearAll() {
+    public func clearAll() {
         do {
             try service.clearAll()
             registros = []
