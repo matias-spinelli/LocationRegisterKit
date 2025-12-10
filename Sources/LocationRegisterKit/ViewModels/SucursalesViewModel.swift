@@ -10,7 +10,7 @@ import Combine
 
 @MainActor
 public final class SucursalesViewModel: ObservableObject {
-    @MainActor @Published var sucursales: [Sucursal] = []
+    @MainActor @Published public var sucursales: [Sucursal] = []
     @MainActor @Published public var isLoading: Bool = false
     @MainActor @Published public var errorMessage: String?
 

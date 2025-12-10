@@ -11,12 +11,12 @@ import Combine
 @MainActor
 public final class RegistroViewModel: ObservableObject {
 
-    @Published var registros: [Registro] = []
+    @Published public var registros: [Registro] = []
     @Published public var errorMessage: String?
 
     private let service = RegistroService()
 
-    func cargarRegistros() {
+    public func cargarRegistros() {
         do {
             registros = try service.getHistorial()
         } catch {
