@@ -1,6 +1,6 @@
 //
 //  LocationManager.swift
-//  iSucurgal
+//  LocationRegisterKit
 //
 //  Created by Matías Spinelli on 06/12/2025.
 //
@@ -35,7 +35,6 @@ public final class LocationManager: NSObject, ObservableObject {
 
     func start() {
         print("🚀 LocationManager.start()")
-
         manager.startMonitoringSignificantLocationChanges()
         manager.startUpdatingLocation()
     }
@@ -55,7 +54,6 @@ public final class LocationManager: NSObject, ObservableObject {
         stop()
     }
 }
-
 
 // MARK: - Delegate
 extension LocationManager: CLLocationManagerDelegate {
@@ -79,7 +77,6 @@ extension LocationManager: CLLocationManagerDelegate {
         }
     }
 
-
     nonisolated public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
 
         guard let loc = locations.last else { return }
@@ -88,12 +85,6 @@ extension LocationManager: CLLocationManagerDelegate {
             print("📍 [LOC] Update:", loc.coordinate)
             self.userLocation = loc
             self.registroManager?.processLocation(loc)
-        }
-    }
-
-    nonisolated public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        Task { @MainActor in
-            print("❌ Location error:", error.localizedDescription)
         }
     }
 }

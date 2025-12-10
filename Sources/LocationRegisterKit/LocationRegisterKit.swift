@@ -8,7 +8,7 @@
 import Foundation
 import CoreLocation
 import Combine
-import UIKit   // para App lifecycle
+import UIKit
 
 @MainActor
 public final class LocationRegisterKitModule {
@@ -46,56 +46,69 @@ public final class LocationRegisterKitModule {
         _geofencingManager.registroManager = rManager
     }
 
-
-    // MARK: - PUBLIC API
-
     public func startModule() {
-        // 1) cargar sucursales desde CoreData → JSON → lo que sea
-        registroManager.sucursalesViewModel.cargarSucursales()
 
-        // 2) reconstruir cache de registros
-        registroManager.rebuildCache()
+        print("🚀 [MODULE] Start")
 
-        // 3) iniciar autorización + location updates
         locationManager.requestAuthorization()
-        locationManager.start()
 
-        // 4) observar cambios de sucursales
+        observeAuthorization()
+
         observeSucursales()
 
-        // 5) lifecycle
         observeLifecycle()
+
+        registroManager.sucursalesViewModel.cargarSucursales()
+        registroManager.rebuildCache()
     }
 
-    // MARK: - Observers
+    private func observeAuthorization() {
+
+        locationManager.$authorizationStatus
+            .compactMap { $0 }
+            .sink { [weak self] status in
+                guard let self else { return }
+
+                print("🛂 [MODULE] AUTH:", status.rawValue)
+
+                if status == .authorizedAlways {
+                    print("🟢 [MODULE] AUTH ALWAYS disponible → iniciar Location + esperar sucursales")
+                    self.locationManager.start()
+                }
+            }
+            .store(in: &cancellables)
+    }
 
     private func observeSucursales() {
+
         registroManager.sucursalesViewModel.$sucursales
             .sink { [weak self] nuevas in
                 guard let self = self else { return }
                 guard !nuevas.isEmpty else { return }
 
-                print("📍 Sucursales listas → configurando geofences")
-                self.geofencingManager.setupGeofences(for: nuevas)
+                print("📍 [MODULE] Sucursales listas → enviar a Geofencing")
+
+                self.geofencingManager.receiveSucursalesFromModule(nuevas)
             }
             .store(in: &cancellables)
     }
 
     private func observeLifecycle() {
+
         NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
             .sink { [weak self] _ in
+                print("🌙 [MODULE] App a background")
                 self?.locationManager.enterBackground()
             }
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { [weak self] _ in
+                print("☀️ [MODULE] App a foreground")
                 self?.locationManager.enterForeground()
             }
             .store(in: &cancellables)
     }
-
-    // MARK: - Optional public helpers
 
     public func registrarEntrada(_ id: UUID) {
         registroManager.registrarEntrada(sucursalID: id)
