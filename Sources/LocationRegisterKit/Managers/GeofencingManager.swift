@@ -18,8 +18,6 @@ public final class GeofencingManager: NSObject, ObservableObject {
     @Published public var isAppActive: Bool = true
     @Published public var monitoredRegions: [CLCircularRegion] = []
 
-    private var pendingSucursales: [Sucursal] = []
-
     public override init() {
         super.init()
         manager.delegate = self
@@ -28,29 +26,16 @@ public final class GeofencingManager: NSObject, ObservableObject {
         manager.pausesLocationUpdatesAutomatically = false
     }
 
-    // MARK: - ENTRY POINT DESDE EL MÓDULO
-
-    public func receiveSucursalesFromModule(_ sucursales: [Sucursal]) {
-        guard !sucursales.isEmpty else { return }
-
-        let status = manager.authorizationStatus
-
-        if status != .authorizedAlways {
-            print("🟡 [GEOFENCE] AUTH no disponible → guardo sucursales en pending")
-            pendingSucursales = sucursales
-            return
-        }
-
-        setupGeofences(for: sucursales)
-    }
-
     // MARK: - Configurar geofences
 
     public func setupGeofences(for sucursales: [Sucursal]) {
+        guard !sucursales.isEmpty else {
+            print("⚠️ [GEOFENCE] No hay sucursales")
+            return
+        }
 
-        if manager.authorizationStatus != .authorizedAlways {
-            print("🔴 [GEOFENCE] setupGeofences llamado SIN AUTH (se guardan en pending)")
-            pendingSucursales = sucursales
+        guard manager.authorizationStatus == .authorizedAlways else {
+            print("🔴 [GEOFENCE] No tengo AUTH ALWAYS")
             return
         }
 
@@ -63,6 +48,7 @@ public final class GeofencingManager: NSObject, ObservableObject {
         monitoredRegions.removeAll()
 
         for suc in sucursales {
+
             let center = CLLocationCoordinate2D(
                 latitude: suc.latitude,
                 longitude: suc.longitude
@@ -85,8 +71,9 @@ public final class GeofencingManager: NSObject, ObservableObject {
     }
 }
 
-// MARK: - LOCATION DELEGATE
 
+
+// MARK: - CLLocationManagerDelegate
 extension GeofencingManager: CLLocationManagerDelegate {
 
     nonisolated public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -94,13 +81,6 @@ extension GeofencingManager: CLLocationManagerDelegate {
 
         Task { @MainActor in
             print("🛂 [GEOFENCE] Authorization cambió → \(status.rawValue)")
-
-            if status == .authorizedAlways, !self.pendingSucursales.isEmpty {
-                print("🟢 [GEOFENCE] Ahora tengo AUTH ALWAYS → aplico pending sucursales")
-                let pendientes = self.pendingSucursales
-                self.pendingSucursales.removeAll()
-                self.setupGeofences(for: pendientes)
-            }
         }
     }
 
@@ -114,7 +94,7 @@ extension GeofencingManager: CLLocationManagerDelegate {
                 return
             }
 
-            print("🟩 [GEOFENCE] ENTREEE → \(id)")
+            print("🟩 [GEOFENCE] ENTREEE → region: \(id)")
 
             guard let uuid = UUID(uuidString: id) else { return }
             self.registroManager?.registrarEntrada(sucursalID: uuid)
@@ -131,10 +111,41 @@ extension GeofencingManager: CLLocationManagerDelegate {
                 return
             }
 
-            print("🟥 [GEOFENCE] SAAALIII → \(id)")
+            print("🟥 [GEOFENCE] SAAALIII → region: \(id)")
 
             guard let uuid = UUID(uuidString: id) else { return }
             self.registroManager?.registrarSalida(sucursalID: uuid)
         }
+    }
+
+    nonisolated public func locationManager(_ manager: CLLocationManager,
+                                            monitoringDidFailFor region: CLRegion?,
+                                            withError error: Error) {
+
+        let msg = error.localizedDescription
+        let id = region?.identifier
+
+        Task { @MainActor in
+            if let id {
+                print("❌ [GEOFENCE] ERROR en región \(id): \(msg)")
+            } else {
+                print("❌ [GEOFENCE] ERROR:", msg)
+            }
+        }
+    }
+}
+
+
+// MARK: - Simulaciones
+extension GeofencingManager {
+
+    public func simulateEnter(regionID: UUID) {
+        print("🟩 [SIM] simulateEnter → \(regionID)")
+        registroManager?.registrarEntrada(sucursalID: regionID)
+    }
+
+    public func simulateExit(regionID: UUID) {
+        print("🟥 [SIM] simulateExit → \(regionID)")
+        registroManager?.registrarSalida(sucursalID: regionID)
     }
 }

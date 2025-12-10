@@ -1,6 +1,6 @@
 //
 //  RegistroManager.swift
-//  iSucurgal
+//  LocationRegisterKit
 //
 //  Created by Matías Spinelli on 07/12/2025.
 //
