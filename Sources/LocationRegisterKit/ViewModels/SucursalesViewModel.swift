@@ -22,6 +22,8 @@ public final class SucursalesViewModel: ObservableObject {
 
     @MainActor
     public func cargarSucursales() {
+        print("cargarSucursales")
+
         isLoading = true
         errorMessage = nil
 
@@ -37,11 +39,13 @@ public final class SucursalesViewModel: ObservableObject {
         } catch {
             print("Error cargando CoreData: \(error.localizedDescription)")
         }
-
-        traerDesdeAPI(oSiFallaLuego: cargarDesdeJSON)
+        
+        traerDesdeAPI()
     }
     
-    private func traerDesdeAPI(oSiFallaLuego fallback: @escaping () -> Void) {
+    private func traerDesdeAPI() {
+        print("traerDesdeAPI")
+
         Task { @MainActor in
             do {
                 try await service.fetchFromAPIAndSave()
@@ -49,18 +53,21 @@ public final class SucursalesViewModel: ObservableObject {
 
             } catch {
                 print("API falló, fallback al JSON")
-                fallback()
+                cargarDesdeJSON()
             }
         }
     }
 
     private func cargarDesdeJSON() {
+        print("cargarDesdeJSON")
+
         Task { @MainActor in
             do {
                 try await service.loadFromJSON()
                 self.isLoading = false
 
             } catch {
+                print("No hay sucursales disponibles.\n\(error.localizedDescription)")
                 self.errorMessage = "No hay sucursales disponibles.\n\(error.localizedDescription)"
                 self.isLoading = false
             }
