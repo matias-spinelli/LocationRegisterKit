@@ -22,8 +22,6 @@ public final class SucursalesViewModel: ObservableObject {
 
     @MainActor
     public func cargarSucursales() {
-        print("cargarSucursales")
-
         isLoading = true
         errorMessage = nil
 
@@ -44,8 +42,6 @@ public final class SucursalesViewModel: ObservableObject {
     }
     
     private func traerDesdeAPI() {
-        print("traerDesdeAPI")
-
         Task { @MainActor in
             do {
                 try await service.fetchFromAPIAndSave()
@@ -53,15 +49,13 @@ public final class SucursalesViewModel: ObservableObject {
                 self.isLoading = false
 
             } catch {
-                print("API falló, fallback al JSON \(error.localizedDescription)")
+                print("API falló, fallback al JSON")
                 cargarDesdeJSON()
             }
         }
     }
 
     private func cargarDesdeJSON() {
-        print("cargarDesdeJSON")
-
         Task { @MainActor in
             do {
                 try await service.loadFromJSON()

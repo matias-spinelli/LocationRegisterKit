@@ -40,22 +40,34 @@ final class APIServiceRender: APIServiceProtocol {
     
     func fetchRegistros() async throws -> [RegistroDTO] {
         guard let url = URL(string: "\(baseURL)/registros") else {
+            print("❌ URL inválida: \(baseURL)/sucursales")
             throw URLError(.badURL)
         }
 
         let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        print("📡 API respondió con \(data.count) bytes")
+
+        guard let http = response as? HTTPURLResponse else {
+            print("❌ Response no es HTTPURLResponse")
+            throw URLError(.badServerResponse)
+        }
+
+        print("📄 Status code: \(http.statusCode)")
+
+        guard (200...299).contains(http.statusCode) else {
+            print("❌ Status code fuera de rango 2xx")
             throw URLError(.badServerResponse)
         }
 
         let dtos = try JSONDecoder().decode([RegistroDTO].self, from: data)
+        print("📥 Decodificación correcta: \(dtos.count) registros")
         return dtos
     }
     
     @MainActor
     func createRegistro(_ registro: RegistroDTO) async throws -> RegistroDTO {
         guard let url = URL(string: "\(baseURL)/registros") else {
+            print("❌ URL inválida: \(baseURL)/sucursales")
             throw URLError(.badURL)
         }
 
@@ -68,11 +80,20 @@ final class APIServiceRender: APIServiceProtocol {
 
         let (responseData, response) = try await URLSession.shared.data(for: request)
 
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        guard let http = response as? HTTPURLResponse else {
+            print("❌ Response no es HTTPURLResponse")
+            throw URLError(.badServerResponse)
+        }
+
+        print("📄 Status code: \(http.statusCode)")
+
+        guard (200...299).contains(http.statusCode) else {
+            print("❌ Status code fuera de rango 2xx")
             throw URLError(.badServerResponse)
         }
 
         let savedRegistro = try JSONDecoder().decode(RegistroDTO.self, from: responseData)
+        print("📥 Decodificación correcta: \(savedRegistro) registro")
         return savedRegistro
     }
 }
