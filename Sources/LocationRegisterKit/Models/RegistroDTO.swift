@@ -34,15 +34,13 @@ public struct RegistroDTO: Identifiable, Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(uuidToObjectIdString(id), forKey: .id)
-
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
 
         try container.encode(tipo, forKey: .tipo)
-        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
-        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
-//        try container.encode(sucursalID.uuidString, forKey: .sucursalID)
-//        try container.encode(userID.uuidString, forKey: .userID)
+//        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
+//        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
+        try container.encode(sucursalID.uuidString, forKey: .sucursalID)
+        try container.encode(userID.uuidString, forKey: .userID)
     }
     
     public init(from decoder: Decoder) throws {
@@ -63,11 +61,11 @@ public struct RegistroDTO: Identifiable, Codable {
 
         let sucursalString = try container.decode(String.self, forKey: .sucursalID)
         let userString = try container.decode(String.self, forKey: .userID)
-        guard let sucursalID = objectIdStringToUUID(sucursalString),
-              let userID = objectIdStringToUUID(userString) else {
+        guard let sucursalID = UUID(uuidString: sucursalString),
+              let userID = UUID(uuidString: userString) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath,
-                debugDescription: "ObjectId string inválido para sucursalID o userID"))
+                debugDescription: "UUID string inválido para sucursalID o userID"))
         }
         self.sucursalID = sucursalID
         self.userID = userID
