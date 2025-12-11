@@ -22,14 +22,17 @@ final class RegistroService {
         try repository.getAll()
     }
 
-    func getRegistrosFromAPI() async throws -> [Registro] {
+    public func getRegistrosFromAPI() async throws -> [Registro] {
+        // 1️⃣ Traemos los DTOs de la API
         let dtos = try await api.fetchRegistros()
-        
+
+        // 2️⃣ Creamos el contenedor en memoria
         let container = NSPersistentContainer(name: "LocationRegisterKit")
         let description = NSPersistentStoreDescription()
         description.type = NSInMemoryStoreType
         container.persistentStoreDescriptions = [description]
-        
+
+        // 3️⃣ Cargamos persistent store de forma segura
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             container.loadPersistentStores { _, error in
                 if let error = error {
@@ -39,9 +42,11 @@ final class RegistroService {
                 }
             }
         }
-        
+
         let context = container.viewContext
-        let registrosInMemory = dtos.map { dto in
+
+        // 4️⃣ Mapeamos los DTOs a NSManagedObjects
+        let registrosInMemory = dtos.map { dto -> Registro in
             let registro = Registro(context: context)
             registro.id = dto.id
             registro.timestamp = dto.timestamp
@@ -50,7 +55,7 @@ final class RegistroService {
             registro.userID = dto.userID
             return registro
         }
-        
+
         return registrosInMemory
     }
 

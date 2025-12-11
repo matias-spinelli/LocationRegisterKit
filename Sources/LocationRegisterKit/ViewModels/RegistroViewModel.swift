@@ -30,6 +30,7 @@ public final class RegistroViewModel: ObservableObject {
             registrosAPI = try await service.getRegistrosFromAPI()
         } catch {
             errorMessage = error.localizedDescription
+            print("❌ Error fetching registros: \(error)")
         }
     }
 
