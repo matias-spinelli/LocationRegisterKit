@@ -12,7 +12,7 @@ import Combine
 public final class RegistroViewModel: ObservableObject {
 
     @Published public var registros: [Registro] = []
-    @Published public var registrosAPI: [Registro] = []
+    @Published public var registrosAPI: [RegistroDTO] = []
     @Published public var errorMessage: String?
 
     private let service = RegistroService()
