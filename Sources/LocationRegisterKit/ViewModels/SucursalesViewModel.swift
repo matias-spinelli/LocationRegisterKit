@@ -49,6 +49,7 @@ public final class SucursalesViewModel: ObservableObject {
         Task { @MainActor in
             do {
                 try await service.fetchFromAPIAndSave()
+                self.cargarDesdeCoreData()
                 self.isLoading = false
 
             } catch {

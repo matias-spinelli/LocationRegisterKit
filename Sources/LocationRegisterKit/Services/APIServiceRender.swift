@@ -13,18 +13,30 @@ final class APIServiceRender: APIServiceProtocol {
 
     func fetchSucursales() async throws -> [SucursalDTO] {
         guard let url = URL(string: "\(baseURL)/sucursales") else {
+            print("❌ URL inválida: \(baseURL)/sucursales")
             throw URLError(.badURL)
         }
 
         let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        print("📡 API respondió con \(data.count) bytes")
+
+        guard let http = response as? HTTPURLResponse else {
+            print("❌ Response no es HTTPURLResponse")
+            throw URLError(.badServerResponse)
+        }
+
+        print("📄 Status code: \(http.statusCode)")
+
+        guard (200...299).contains(http.statusCode) else {
+            print("❌ Status code fuera de rango 2xx")
             throw URLError(.badServerResponse)
         }
 
         let dtos = try JSONDecoder().decode([SucursalDTO].self, from: data)
+        print("📥 Decodificación correcta: \(dtos.count) sucursales")
         return dtos
     }
+
     
     func fetchRegistros() async throws -> [RegistroDTO] {
         guard let url = URL(string: "\(baseURL)/registros") else {

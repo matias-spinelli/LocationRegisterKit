@@ -28,7 +28,9 @@ final class SucursalService {
     }
 
     func fetchFromAPIAndSave() async throws {
+        print("📡 Llamando a la API de sucursales...")
         let dtos = try await api.fetchSucursales()
+        print("📥 Recibí \(dtos.count) sucursales desde la API")
 
         guard !dtos.isEmpty else {
             throw NSError(domain: "API", code: -2,
@@ -36,7 +38,9 @@ final class SucursalService {
         }
 
         try repository.saveSucursales(dtos)
+        print("💾 Sucursales guardadas en CoreData")
     }
+
 
     func clearAll() throws {
         try repository.clearAll()
