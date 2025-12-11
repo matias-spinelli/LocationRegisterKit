@@ -16,7 +16,6 @@ public struct RegistroDTO: Identifiable, Codable {
     public var userID: UUID
     
     enum CodingKeys: String, CodingKey {
-        case id
         case timestamp
         case tipo
         case sucursalID
@@ -35,7 +34,7 @@ public struct RegistroDTO: Identifiable, Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        isoFormatter.formatOptions = [.withInternetDateTime]
         try container.encode(isoFormatter.string(from: timestamp), forKey: .timestamp)
         
         try container.encode(tipo, forKey: .tipo)
@@ -52,7 +51,7 @@ public struct RegistroDTO: Identifiable, Codable {
 
         let timestampString = try container.decode(String.self, forKey: .timestamp)
         let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        isoFormatter.formatOptions = [.withInternetDateTime]
         guard let timestamp = isoFormatter.date(from: timestampString) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath,
