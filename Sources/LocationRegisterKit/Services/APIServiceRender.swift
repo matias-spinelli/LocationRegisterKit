@@ -67,7 +67,7 @@ final class APIServiceRender: APIServiceProtocol {
     @MainActor
     func createRegistro(_ registro: RegistroDTO) async throws -> RegistroDTO {
         guard let url = URL(string: "\(baseURL)/registros") else {
-            print("❌ URL inválida: \(baseURL)/sucursales")
+            print("❌ URL inválida: \(baseURL)/registros")
             throw URLError(.badURL)
         }
 

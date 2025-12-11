@@ -33,31 +33,50 @@ public struct RegistroDTO: Identifiable, Codable {
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+
         try container.encode(uuidToObjectIdString(id), forKey: .id)
-        try container.encode(timestamp, forKey: .timestamp)
+
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let timestampString = isoFormatter.string(from: timestamp)
+        try container.encode(timestampString, forKey: .timestamp)
+
         try container.encode(tipo, forKey: .tipo)
-        try container.encode(sucursalID.uuidString, forKey: .sucursalID)
-        try container.encode(userID.uuidString, forKey: .userID)
+        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
+        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+       
         let idString = try container.decode(String.self, forKey: .id)
-        let sucursalString = try container.decode(String.self, forKey: .sucursalID)
-        let userString = try container.decode(String.self, forKey: .userID)
-
-        guard let id = objectIdStringToUUID(idString),
-              let sucursalID = objectIdStringToUUID(sucursalString),
-              let userID = objectIdStringToUUID(userString)
-        else {
+        guard let id = objectIdStringToUUID(idString) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath,
-                debugDescription: "ObjectId string inválido"))
+                debugDescription: "ObjectId string inválido para id"))
         }
-
         self.id = id
-        self.timestamp = try container.decode(Date.self, forKey: .timestamp)
+
+        let timestampString = try container.decode(String.self, forKey: .timestamp)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let timestamp = isoFormatter.date(from: timestampString) else {
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath,
+                debugDescription: "Timestamp ISO8601 inválido"))
+        }
+        self.timestamp = timestamp
+
         self.tipo = try container.decode(RegistroType.self, forKey: .tipo)
+
+        let sucursalString = try container.decode(String.self, forKey: .sucursalID)
+        let userString = try container.decode(String.self, forKey: .userID)
+        guard let sucursalID = objectIdStringToUUID(sucursalString),
+              let userID = objectIdStringToUUID(userString) else {
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath,
+                debugDescription: "ObjectId string inválido para sucursalID o userID"))
+        }
         self.sucursalID = sucursalID
         self.userID = userID
     }
