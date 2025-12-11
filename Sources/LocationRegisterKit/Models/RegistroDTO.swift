@@ -34,8 +34,10 @@ public struct RegistroDTO: Identifiable, Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
-
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        try container.encode(isoFormatter.string(from: timestamp), forKey: .timestamp)
+        
         try container.encode(tipo, forKey: .tipo)
 //        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
 //        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
@@ -46,16 +48,17 @@ public struct RegistroDTO: Identifiable, Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
        
-        let idString = try container.decode(String.self, forKey: .id)
-        guard let id = objectIdStringToUUID(idString) else {
+        self.id = UUID()
+
+        let timestampString = try container.decode(String.self, forKey: .timestamp)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let timestamp = isoFormatter.date(from: timestampString) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath,
-                debugDescription: "ObjectId string inválido para id"))
+                debugDescription: "Timestamp ISO8601 inválido"))
         }
-        self.id = id
-
-        let timestampDouble = try container.decode(Double.self, forKey: .timestamp)
-        self.timestamp = Date(timeIntervalSince1970: timestampDouble)
+        self.timestamp = timestamp
 
         self.tipo = try container.decode(RegistroType.self, forKey: .tipo)
 
