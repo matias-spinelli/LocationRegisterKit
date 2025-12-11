@@ -78,6 +78,10 @@ final class APIServiceRender: APIServiceProtocol {
         let data = try JSONEncoder().encode(registro)
         request.httpBody = data
 
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📤 JSON a enviar: \(jsonString)")
+        }
+        
         let (responseData, response) = try await URLSession.shared.data(for: request)
 
         guard let http = response as? HTTPURLResponse else {
