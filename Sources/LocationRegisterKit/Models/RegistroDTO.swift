@@ -22,6 +22,14 @@ public struct RegistroDTO: Identifiable, Codable {
         case userID
     }
 
+    public init(id: UUID, timestamp: Date, tipo: RegistroType, sucursalID: UUID, userID: UUID) {
+        self.id = id
+        self.timestamp = timestamp
+        self.tipo = tipo
+        self.sucursalID = sucursalID
+        self.userID = userID
+    }
+    
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id.uuidString, forKey: .id)
@@ -48,14 +56,6 @@ public struct RegistroDTO: Identifiable, Codable {
         self.id = id
         self.timestamp = try container.decode(Date.self, forKey: .timestamp)
         self.tipo = try container.decode(RegistroType.self, forKey: .tipo)
-        self.sucursalID = sucursalID
-        self.userID = userID
-    }
-    
-    public init(id: UUID, timestamp: Date, tipo: RegistroType, sucursalID: UUID, userID: UUID) {
-        self.id = id
-        self.timestamp = timestamp
-        self.tipo = tipo
         self.sucursalID = sucursalID
         self.userID = userID
     }

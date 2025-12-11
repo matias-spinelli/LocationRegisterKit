@@ -52,7 +52,7 @@ public final class SucursalesViewModel: ObservableObject {
                 self.isLoading = false
 
             } catch {
-                print("API falló, fallback al JSON")
+                print("API falló, fallback al JSON \(error.localizedDescription)")
                 cargarDesdeJSON()
             }
         }
@@ -64,6 +64,7 @@ public final class SucursalesViewModel: ObservableObject {
         Task { @MainActor in
             do {
                 try await service.loadFromJSON()
+                self.cargarDesdeCoreData()
                 self.isLoading = false
 
             } catch {
