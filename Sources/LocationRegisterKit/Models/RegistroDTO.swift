@@ -39,10 +39,10 @@ public struct RegistroDTO: Identifiable, Codable {
         try container.encode(timestamp.timeIntervalSince1970, forKey: .timestamp)
 
         try container.encode(tipo, forKey: .tipo)
-//        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
-//        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
-        try container.encode(sucursalID.uuidString, forKey: .sucursalID)
-        try container.encode(userID.uuidString, forKey: .userID)
+        try container.encode(uuidToObjectIdString(sucursalID), forKey: .sucursalID)
+        try container.encode(uuidToObjectIdString(userID), forKey: .userID)
+//        try container.encode(sucursalID.uuidString, forKey: .sucursalID)
+//        try container.encode(userID.uuidString, forKey: .userID)
     }
     
     public init(from decoder: Decoder) throws {
@@ -63,11 +63,11 @@ public struct RegistroDTO: Identifiable, Codable {
 
         let sucursalString = try container.decode(String.self, forKey: .sucursalID)
         let userString = try container.decode(String.self, forKey: .userID)
-        guard let sucursalID = UUID(uuidString: sucursalString),
-              let userID = UUID(uuidString: userString) else {
+        guard let sucursalID = objectIdStringToUUID(sucursalString),
+              let userID = objectIdStringToUUID(userString) else {
             throw DecodingError.dataCorrupted(.init(
                 codingPath: decoder.codingPath,
-                debugDescription: "UUID string inválido para sucursalID o userID"))
+                debugDescription: "ObjectId string inválido para sucursalID o userID"))
         }
         self.sucursalID = sucursalID
         self.userID = userID
