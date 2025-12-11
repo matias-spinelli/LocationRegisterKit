@@ -45,7 +45,6 @@ public final class SucursalesViewModel: ObservableObject {
         Task { @MainActor in
             do {
                 try await service.fetchFromAPIAndSave()
-                self.cargarDesdeCoreData()
                 self.isLoading = false
 
             } catch {
@@ -59,7 +58,6 @@ public final class SucursalesViewModel: ObservableObject {
         Task { @MainActor in
             do {
                 try await service.loadFromJSON()
-                self.cargarDesdeCoreData()
                 self.isLoading = false
 
             } catch {

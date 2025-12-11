@@ -46,9 +46,7 @@ public final class RegistroViewModel: ObservableObject {
                 let _ = try await self?.service.crearRegistroAPI(sucursalID: sucursalID, tipo: tipo)
                 await self?.getRegistrosFromAPI()
             } catch {
-                await MainActor.run {
-                    self?.errorMessage = "Error enviando al backend: \(error)"
-                }
+                print("⚠️ Error enviando al backend: \(error)")
             }
         }
     }
