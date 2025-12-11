@@ -22,6 +22,7 @@
 
 ## 🧰 Pendientes técnicos
 - [ ] Crear una clase Helper para convertir UUID en ObjectId y de ObjectID a UUID
+- [ ] Corregir en la API SucursalID y UserID como ObjectId y no como String
 
 ---
 
