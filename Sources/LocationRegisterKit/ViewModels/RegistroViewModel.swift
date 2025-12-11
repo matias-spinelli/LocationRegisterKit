@@ -12,13 +12,22 @@ import Combine
 public final class RegistroViewModel: ObservableObject {
 
     @Published public var registros: [Registro] = []
+    @Published public var registrosAPI: [Registro] = []
     @Published public var errorMessage: String?
 
     private let service = RegistroService()
 
-    public func cargarRegistros() {
+    public func getRegistrosFromCoreData() {
         do {
-            registros = try service.getHistorial()
+            registros = try service.getLocalRegistros()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func getRegistrosFromAPI() async {
+        do {
+            registrosAPI = try await service.getRegistrosFromAPI()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -27,9 +36,20 @@ public final class RegistroViewModel: ObservableObject {
     func registrar(tipo: RegistroType, sucursalID: UUID) {
         do {
             try service.crearRegistro(sucursalID: sucursalID, tipo: tipo)
-            cargarRegistros()
+            getRegistrosFromCoreData()
         } catch {
             errorMessage = error.localizedDescription
+        }
+        
+        Task { [weak self] in
+            do {
+                let _ = try await self?.service.crearRegistroAPI(sucursalID: sucursalID, tipo: tipo)
+                await self?.getRegistrosFromAPI()
+            } catch {
+                await MainActor.run {
+                    self?.errorMessage = "Error enviando al backend: \(error)"
+                }
+            }
         }
     }
 

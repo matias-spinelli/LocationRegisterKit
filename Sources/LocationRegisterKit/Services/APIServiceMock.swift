@@ -8,8 +8,7 @@
 import Foundation
 
 public protocol APIServiceProtocol: Sendable {
-    func fetchSucursales(completion: @escaping (Result<[SucursalDTO], Error>) -> Void)
-    func fetchSucursalesAsync() async throws -> [SucursalDTO]
+    func fetchSucursales() async throws -> [SucursalDTO]
 }
 
 public final class APIServiceMock: APIServiceProtocol {
@@ -19,11 +18,7 @@ public final class APIServiceMock: APIServiceProtocol {
         self.bundle = bundle
     }
 
-    public func fetchSucursales(completion: @escaping (Result<[SucursalDTO], Error>) -> Void) {
-        completion(.success([]))
-    }
-
-    public func fetchSucursalesAsync() async throws -> [SucursalDTO] {
+    public func fetchSucursales() async throws -> [SucursalDTO] {
         return []
     }
 }
