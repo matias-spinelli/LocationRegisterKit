@@ -11,7 +11,7 @@
 ---
 
 ## 🚀 Features pendientes
-- [ ] REST API - para obtener Sucursales y para registrar entradas/salidas
+- [X] REST API - para obtener Sucursales y para registrar entradas/salidas
 
 ---
 
@@ -21,7 +21,7 @@
 ---
 
 ## 🧰 Pendientes técnicos
-- [ ]
+- [ ] Crear una clase Helper para convertir UUID en ObjectId y de ObjectID a UUID
 
 ---
 

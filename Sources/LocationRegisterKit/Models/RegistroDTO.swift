@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 public struct RegistroDTO: Identifiable, Codable {
     public var id: UUID
@@ -32,7 +33,7 @@ public struct RegistroDTO: Identifiable, Codable {
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id.uuidString, forKey: .id)
+        try container.encode(uuidToObjectIdString(id), forKey: .id)
         try container.encode(timestamp, forKey: .timestamp)
         try container.encode(tipo, forKey: .tipo)
         try container.encode(sucursalID.uuidString, forKey: .sucursalID)
@@ -44,15 +45,16 @@ public struct RegistroDTO: Identifiable, Codable {
         let idString = try container.decode(String.self, forKey: .id)
         let sucursalString = try container.decode(String.self, forKey: .sucursalID)
         let userString = try container.decode(String.self, forKey: .userID)
-        
-        guard let id = UUID(uuidString: idString),
-              let sucursalID = UUID(uuidString: sucursalString),
-              let userID = UUID(uuidString: userString)
+
+        guard let id = objectIdStringToUUID(idString),
+              let sucursalID = objectIdStringToUUID(sucursalString),
+              let userID = objectIdStringToUUID(userString)
         else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath,
-                                                   debugDescription: "UUID string inválido"))
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath,
+                debugDescription: "ObjectId string inválido"))
         }
-        
+
         self.id = id
         self.timestamp = try container.decode(Date.self, forKey: .timestamp)
         self.tipo = try container.decode(RegistroType.self, forKey: .tipo)
@@ -70,4 +72,34 @@ extension Registro {
     public var tipoEnum: RegistroType {
         return RegistroType(rawValue: tipo) ?? .entrada
     }
+}
+
+// MARK: - Helpers
+
+fileprivate func uuidToObjectIdString(_ uuid: UUID) -> String {
+    // Convertimos UUID -> 12 bytes -> hex string (24 chars)
+    let bytes = uuid.uuid
+    return String(format: "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                  bytes.0, bytes.1, bytes.2, bytes.3,
+                  bytes.4, bytes.5, bytes.6, bytes.7,
+                  bytes.8, bytes.9, bytes.10, bytes.11)
+}
+
+fileprivate func objectIdStringToUUID(_ string: String) -> UUID? {
+    guard string.count == 24 else { return nil }
+    // tomamos 16 bytes del ObjectId para crear UUID
+    let hex = string.prefix(32)  // completamos si es necesario (o hash)
+    var uuidBytes = [UInt8](repeating: 0, count: 16)
+    for i in 0..<16 {
+        let start = hex.index(hex.startIndex, offsetBy: i*2)
+        let end = hex.index(start, offsetBy: 2)
+        let byteStr = hex[start..<end]
+        uuidBytes[i] = UInt8(byteStr, radix: 16) ?? 0
+    }
+    return UUID(uuid: (
+        uuidBytes[0], uuidBytes[1], uuidBytes[2], uuidBytes[3],
+        uuidBytes[4], uuidBytes[5], uuidBytes[6], uuidBytes[7],
+        uuidBytes[8], uuidBytes[9], uuidBytes[10], uuidBytes[11],
+        uuidBytes[12], uuidBytes[13], uuidBytes[14], uuidBytes[15]
+    ))
 }
